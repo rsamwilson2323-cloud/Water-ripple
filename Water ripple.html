@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Water Ripple</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #001122;
+    touch-action: none;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+onresize = resize;
+
+// RIPPLES ARRAY
+let ripples = [];
+
+// TOUCH STATE
+let isTouching = false;
+let touchX = 0;
+let touchY = 0;
+
+// ADD RIPPLE FUNCTION
+function addRipple(x, y){
+  ripples.push({
+    x, y,
+    radius: 1,
+    alpha: 1
+  });
+}
+
+// TOUCH START → tap + hold
+document.addEventListener("touchstart", e => {
+  let t = e.touches[0];
+  touchX = t.clientX;
+  touchY = t.clientY;
+  isTouching = true;
+  addRipple(touchX, touchY); // tap ripple
+});
+
+// TOUCH MOVE → continuous
+document.addEventListener("touchmove", e => {
+  let t = e.touches[0];
+  touchX = t.clientX;
+  touchY = t.clientY;
+  isTouching = true;
+});
+
+// TOUCH END → stop continuous
+document.addEventListener("touchend", () => {
+  isTouching = false;
+});
+
+// MOUSE (Laptop) support
+document.addEventListener("mousedown", e => {
+  isTouching = true;
+  touchX = e.clientX;
+  touchY = e.clientY;
+  addRipple(touchX, touchY);
+});
+document.addEventListener("mousemove", e => {
+  if(isTouching){
+    touchX = e.clientX;
+    touchY = e.clientY;
+  }
+});
+document.addEventListener("mouseup", () => {
+  isTouching = false;
+});
+
+// MAIN ANIMATION LOOP
+function animate(){
+  ctx.fillStyle = "rgba(0,0,20,0.15)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Continuous ripples during long-press
+  if(isTouching){
+    addRipple(touchX, touchY);
+  }
+
+  // Draw each ripple
+  ripples.forEach((r, i) => {
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(0,150,255, ${r.alpha})`;
+    ctx.lineWidth = 3;
+    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    r.radius += 3;
+    r.alpha -= 0.02;
+
+    if(r.alpha <= 0){
+      ripples.splice(i, 1);
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
